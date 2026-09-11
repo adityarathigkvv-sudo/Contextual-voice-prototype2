@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contextual Voice Prompt — Prototype</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#f5f6f8;font-family:Inter,Arial,sans-serif;color:#172033}
+.app{width:100%;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+.phone{width:390px;min-height:760px;background:#fff;border:1px solid #dfe3ea;border-radius:28px;box-shadow:0 18px 50px #00000018;overflow:hidden;position:relative}
+.top{padding:18px 20px 12px;border-bottom:1px solid #edf0f4;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:800;font-size:18px}.pill{font-size:11px;background:#eef2ff;color:#315cff;padding:6px 9px;border-radius:999px}
+.screen{padding:24px 22px 30px}.label{font-size:12px;color:#7b8495;margin-bottom:8px}.heading{font-size:25px;font-weight:800;margin-bottom:8px}.sub{font-size:14px;color:#667085;line-height:1.5}
+.input{margin-top:28px;border:1px solid #dfe3ea;border-radius:16px;padding:15px 14px;display:flex;align-items:center;gap:10px;color:#9aa2b1}
+.mic{margin-left:auto;border:0;background:#172033;color:#fff;border-radius:12px;width:42px;height:42px;font-size:19px;cursor:pointer}
+.prompt{margin-top:12px;padding:14px;border:1px solid #d9e1ff;background:#f2f5ff;border-radius:16px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.promptIcon{font-size:23px}.prompt b{font-size:13px}.prompt span{display:block;font-size:11px;color:#667085;margin-top:3px}
+.examples{margin-top:24px}.examples b{font-size:12px}.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.chip{border:1px solid #e2e6ec;border-radius:999px;padding:8px 10px;font-size:11px;color:#596273}
+.hidden{display:none}
+.listening{text-align:center;padding-top:42px}.orb{width:104px;height:104px;border-radius:50%;margin:24px auto;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:38px;animation:pulse 1.4s infinite}.bars{font-size:22px;letter-spacing:4px;color:#315cff;margin:18px}.heard{margin:24px 0;background:#f7f8fa;border-radius:16px;padding:16px;text-align:left;font-size:14px;line-height:1.5}
+button.action{border:0;background:#172033;color:white;border-radius:13px;padding:13px 18px;font-weight:700;cursor:pointer}.secondary{background:#eef0f4!important;color:#172033!important}
+.result{margin-top:26px}.heardbox{background:#f7f8fa;border-radius:16px;padding:15px;font-size:13px;line-height:1.5}.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1}
+.response{margin-top:22px;border:1px solid #e1e5eb;border-radius:16px;padding:16px;font-size:14px;line-height:1.55}
+.tag{font-size:10px;color:#315cff;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.footer{position:absolute;bottom:0;width:100%;padding:10px 18px;background:#fafbfc;border-top:1px solid #edf0f4;font-size:10px;color:#8a92a1;text-align:center}
+@keyframes pulse{50%{transform:scale(1.06)}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="phone">
+  <div class="top"><div class="logo">ChatGPT</div><div class="pill">Voice prototype</div></div>
+
+  <div id="home" class="screen">
+    <div class="label">CONTEXTUAL DISCOVERY</div>
+    <div class="heading">What can I help with?</div>
+    <div class="sub">Voice appears when speaking can be easier than typing.</div>
+
+    <div class="input">Ask anything… <button class="mic" onclick="startVoice()" aria-label="Start voice">🎙</button></div>
+
+    <div class="prompt" onclick="startVoice()">
+      <div class="promptIcon">🎙️</div>
+      <div><b>Try saying it</b><span>Useful for longer or conversational requests.</span></div>
+    </div>
+
+    <div class="examples"><b>Try a natural request</b>
+      <div class="chips">
+        <div class="chip">Tell me what you’re thinking</div>
+        <div class="chip">Help me plan my day</div>
+        <div class="chip">Explain this simply</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="listening" class="screen hidden listening">
+    <div class="label">VOICE INPUT</div>
+    <div class="heading">Listening…</div>
+    <div class="sub">Say your request naturally. You stay in control.</div>
+    <div class="orb">🎙️</div>
+    <div class="bars">▁ ▃ ▆ ▃ ▇ ▂ ▅</div>
+    <div class="heard">“Help me plan my study schedule.”</div>
+    <button class="action" onclick="showResult()">Stop & review</button>
+  </div>
+
+  <div id="result" class="screen hidden result">
+    <div class="label">REVIEW BEFORE SEND</div>
+    <div class="heading">I heard:</div>
+    <div class="heardbox">“Help me plan my study schedule.”</div>
+    <div class="actions">
+      <button class="action" onclick="complete()">Send</button>
+      <button class="action secondary" onclick="startVoice()">Try again</button>
+    </div>
+    <div class="response" id="response">
+      <div class="tag">Why this matters</div>
+      You can edit the transcription or switch back to typing if the request isn't captured correctly.
+    </div>
+  </div>
+
+  <div id="done" class="screen hidden result">
+    <div class="label">VOICE TASK COMPLETE</div>
+    <div class="heading">Here’s a simple plan.</div>
+    <div class="response">
+      <b>Study plan</b><br><br>
+      1. 45 min — Core topic<br>
+      2. 10 min — Break<br>
+      3. 35 min — Practice questions<br>
+      4. 10 min — Quick revision
+    </div>
+    <button style="margin-top:16px;width:100%" class="action" onclick="reset()">Try voice again</button>
+  </div>
+
+  <div class="footer">Contextual prompt • Never auto-listens • Manual typing remains available</div>
+</div>
+</div>
+<script>
+function hideAll(){['home','listening','result','done'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
+function startVoice(){hideAll();document.getElementById('listening').classList.remove('hidden')}
+function showResult(){hideAll();document.getElementById('result').classList.remove('hidden')}
+function complete(){hideAll();document.getElementById('done').classList.remove('hidden')}
+function reset(){hideAll();document.getElementById('home').classList.remove('hidden')}
+</script>
+</body>
+</html>
